@@ -5,6 +5,7 @@
 :- use_module(library('http/json')).
 
 :- consult([alice]).
+:- consult([windowsfunctions]).
 
 category([
 	pattern([can,you,star(A),'?']),
@@ -76,6 +77,18 @@ category([
 ]).
 
 category([
+	pattern([star(_),goodbye]),
+	template([think(halt)])
+]).
+
+category(X) :- win_functions(X).
+
+category([
+	pattern([hello]),
+	template(['Hello,',where,can,'I',help,you,with,?])
+]).
+
+category([
 	pattern([star(_)]),
 	template([random([
 		[so,what,is,your,horoscope,'?'],
@@ -139,3 +152,4 @@ art --> [the];[a];[an].
 
 noun --> [cat];[dog];[mouse];[rat];[table].
 
+%:- write('\33\[2J') , loop.

@@ -66,11 +66,10 @@
 % loop/0 is the top predicate.
 % loop/1 uses the argument  to keep track of the context.
 
-loop:-
-	loop([hello]).
+loop:- loop([hello]).
 
 loop(Context):-
-	interact_once(Context,NewContext),!,   % Try once only
+	interact_once(Context,NewContext),!,  % Try once only
 	loop(NewContext).
 
 %
@@ -92,6 +91,19 @@ interact_once(Context,NewContext):-
 % Find a rule that matches the input and produce the response
 
 find_and_reply(Input,Context,NewContext):-
+	% Category with "that" and with positive/negative response
+	category(C),
+	member(that(TH),C),
+	tokenise(TH,THTokens),
+	tokenise(Context,CTokens),
+	input_match(THTokens,CTokens),
+	member(pattern(P),C),
+	tokenise(P,PTokens),
+	input_match(PTokens,Input),
+	member(template(T,positive(Pos),negative(Neg)),C),
+	generate_response(T,Pos,Neg,Context,NewContext),nl.
+
+find_and_reply(Input,Context,NewContext):-
 	% Category with "that"
 	category(C),
 	member(that(TH),C),
@@ -104,6 +116,16 @@ find_and_reply(Input,Context,NewContext):-
 	member(template(T),C),
 	generate_response(T,Context,NewContext),nl.
 
+find_and_reply(Input,Context,NewContext):-
+	% Category without "that" and with positive/negative response
+	category(C),
+	\+ member(that(_),C),
+	member(pattern(P),C),
+	tokenise(P,PTokens),
+	input_match(PTokens,Input),
+	member(template(T,positive(Pos),negative(Neg)),C),
+	generate_response(T,Pos,Neg,Context,NewContext),nl.
+	
 find_and_reply(Input,Context,NewContext):-
 	% Category without "that"
 	category(C),
@@ -161,7 +183,16 @@ input_match([star([])|T],Input_Line):-
 
 input_match([star([H|TStar])|T],[H|T2]):-
 	input_match([star(TStar)|T],T2).
+	
+input_match([one_or_zero([])|T],Input_Line) :-
+	input_match(T,Input_Line).
 
+input_match([one_or_zero([H|Tpos])|T],[H|T2]) :-
+	input_match([one_or_zero(Tpos)|T],T2).
+
+input_match([one_or_zero(_)|T],Input_Line) :-
+	input_match(T,Input_Line).
+	
 input_match([syntax(SynCat,Match)|T],Input_Line):-
 	PredCall =.. [SynCat,Input_Line,Rest],
 	call(PredCall),                 % Call to the grammar rules
@@ -192,7 +223,7 @@ generate_response([think(Commands)|T],Context,FinalResponse):-
 	% "think" element
 	call(Commands),
 	generate_response(T,Context,FinalResponse).
-
+	
 generate_response([srai(SRAIList)|T],Context,FinalResponse):-
 	!,
 	% "srai" element
@@ -219,12 +250,33 @@ generate_response([H|T],Context,FinalResponse):-
 	generate_response(T,Context,TResponse),
 	append(HResponse,TResponse,FinalResponse).
 
+generate_response([[]|T],Context,TResponse) :-
+	generate_response(T,Context,TResponse).
+	
 generate_response([H|T],Context,[H|TResponse]):-
 	% Default rule
 	write(H),
 	write(' '),
 	generate_response(T,Context,TResponse).
+	
 
+%
+%======================================================================
+%generate_response(+Commands,+PositiveResponse,+NegativeResponse,+Context,-Response)
+% Output the response that corresponds to the template and the given
+% context. The output argument Response contains the generated
+% response tokenised so that it can be used as the context of the
+% next interaction.
+
+:- discontiguous generate_response/3.
+
+generate_response(think(Commands),PosResponse,_,Context,FinalResponse) :-
+	call(Commands),
+	generate_response(PosResponse,Context,FinalResponse).
+	
+generate_response(think(_),_,NegResponse,Context,FinalResponse) :-
+	generate_response(NegResponse,Context,FinalResponse).
+	
 %
 %======================================================================
 
@@ -291,9 +343,15 @@ tokenise([],[]):-
 tokenise([star(A)|T],[star(A)|Tokenised]):-
 	!,
 	tokenise(T,Tokenised).
+	
+tokenise([one_or_zero(A)|T],[one_or_zero(A)|Tokenised]) :-
+	!,
+	tokenise(T,Tokenised).
+
 tokenise([syntax(A,B)|T],[syntax(A,B)|Tokenised]):-
 	!,
 	tokenise(T,Tokenised).
+
 tokenise([Atom|T],Tokens):-
 	atomic(Atom),
 	!,
