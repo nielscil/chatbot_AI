@@ -57,6 +57,7 @@
 
 :- use_module(library(lists),[member/2,nth0/3,append/3]).
 :- use_module(library(random),[random/3]).
+:- use_module([database]).
 
 :- dynamic alice_var/2.
 
@@ -318,17 +319,25 @@ list_length([_|T],L):-
 % set_var(+VarName,+Value)
 % Utility predicates to get the value of a Bot variable or set the
 % variable
+get_var(List,Value) :- is_list(List) , atomic_list_concat(List,-,VarName),
+	get_var(VarName,Value).
 
 get_var(VarName,Value):-
-	alice_var(VarName,Value).
+	get_user_fact(VarName,Value).
+%	alice_var(VarName,Value).
 
-get_var(VarName,[]):-
-	\+ alice_var(VarName,_).
+% get_var(VarName,[]):-
+%	get_user_fact(VarName,_).
+%	alice_var(VarName,_).
 
+set_var(List,Value) :- is_list(List) , atomic_list_concat(List,-,VarName),
+	set_var(VarName,Value).
+	
 set_var(VarName,Value):-
-	retractall(alice_var(VarName,_)),
+%	retractall(alice_var(VarName,_)),
 	tokenise(Value,Tokens),
-	asserta(alice_var(VarName,Tokens)).
+	update_user_fact(VarName,Tokens).
+%	asserta(alice_var(VarName,Tokens)).
 
 %
 %=======================================================================

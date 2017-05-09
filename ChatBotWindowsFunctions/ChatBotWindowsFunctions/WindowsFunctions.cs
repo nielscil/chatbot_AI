@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChatBotWindowsFunctions
 {
-    public static class Functions
+    public static class WindowsFunctions
     {
         private static CoreAudioDevice _defaultAudioDevice;
         public static CoreAudioDevice DefaultAudioDevice

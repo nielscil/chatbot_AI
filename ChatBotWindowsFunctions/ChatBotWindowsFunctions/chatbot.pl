@@ -6,6 +6,7 @@
 
 :- consult([alice]).
 :- consult([windowsfunctions]).
+:- consult([name_categories]).
 
 category([
 	pattern([can,you,star(A),'?']),
@@ -52,17 +53,23 @@ category([
 
 category([
 	pattern([is,star([Person]),female,'?']),
-	template([think(female(Person)),'Yes, ',she,is,'!'])
+	template(think(female(Person)),
+	positive(['Yes, ',she,is,'!']),
+	negative(['No, ',Person,is,a,male]))
 ]).
 
 category([
-	pattern([is,star([Person]),female,'?']),
-	template([think(not(female(Person))),'No, ',Person,is,not,female])
+	pattern([is,star([Person]),male,'?']),
+	template(think(not(female(Person))),
+	positive(['Yes, ',he,is,'!']),
+	negative(['No, ',Person,is,a,female]))
 ]).
 
 category([
 	pattern([who,is,the,father,of,star([Person]),'?']),
-	template([think(father_of(Father,Person)),Father,is,the,father,of,Person])
+	template(think(father_of(Father,Person)),
+	positive([Father,is,the,father,of,Person]),
+	negative(['The',father,of,Person,'isn''t',known]))
 ]).
 
 category([
@@ -81,12 +88,20 @@ category([
 	template([think(halt)])
 ]).
 
-category(X) :- win_functions(X).
+category([
+	pattern(['If',star(A),is,star(B),then,star(C),is,star(D)]),
+	template(['Okay'])
+])
 
 category([
 	pattern([hello]),
-	template(['Hello,',where,can,'I',help,you,with,?])
+	template(think(get_var(name,Name)),
+	positive(['Hello',Name,',what',can,'I',do,for,'you?']),
+	negative(['Hello,',what,is,your,'name?']))
 ]).
+
+category(X) :- name_category(X).
+category(X) :- win_functions(X).
 
 category([
 	pattern([star(_)]),
@@ -126,6 +141,9 @@ father_of(X,Y) :- male(X),
                   parent_of(X,Y).
 mother_of(X,Y) :- female(X),
                   parent_of(X,Y).
+				  
+save_data(A,B,C,D) :- atomic_list_concat(A, ' ', AAtom) , atomic_list_concat(B, ' ', BAtom), atomic_list_concat(C, ' ', CAtom),
+					  atomic_list_concat(D, ' ', DAtom) , If=..[BAtom,AAtom] , Then=..[DAtom,CAtom].
 
 % http://openweathermap.org/
 temperature(City,Temp) :-
