@@ -130,7 +130,7 @@ namespace ChatBotWindowsFunctions
             return calendars;
         }
 
-        public static Models.Event AddEventToCalendar(string calendar,string summary, string description, string location, string start, string end,string timeZone)
+        public static Models.Event AddEventToCalendar(string id,string summary, string description, string location,string startDate, string start, string endDate, string end,string timeZone)
         {
             Event e = new Event()
             {
@@ -139,16 +139,16 @@ namespace ChatBotWindowsFunctions
                 Description = description,
                 Start = new EventDateTime()
                 {
-                    DateTime = DateTime.Parse(start),
-                    TimeZone = "Europe/Amsterdam",
+                    DateTime = DateTime.Parse($"{startDate} {start}"),
+                    TimeZone = timeZone,
                 },
                 End = new EventDateTime()
                 {
-                    DateTime = DateTime.Parse(end),
-                    TimeZone = "Europa/Amsterdam",
+                    DateTime = DateTime.Parse($"{endDate} {end}"),
+                    TimeZone = timeZone,
                 }
             };
-            EventsResource.InsertRequest request = CalendarService.Events.Insert(e,calendar);
+            EventsResource.InsertRequest request = CalendarService.Events.Insert(e,id);
             return new Models.Event(request.Execute());
         }
     }

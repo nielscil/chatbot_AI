@@ -89,11 +89,6 @@ category([
 ]).
 
 category([
-	pattern(['If',star(A),is,star(B),then,star(C),is,star(D)]),
-	template(['Okay'])
-])
-
-category([
 	pattern([hello]),
 	template(think(get_var(name,Name)),
 	positive(['Hello',Name,',what',can,'I',do,for,'you?']),
@@ -142,8 +137,8 @@ father_of(X,Y) :- male(X),
 mother_of(X,Y) :- female(X),
                   parent_of(X,Y).
 				  
-save_data(A,B,C,D) :- atomic_list_concat(A, ' ', AAtom) , atomic_list_concat(B, ' ', BAtom), atomic_list_concat(C, ' ', CAtom),
-					  atomic_list_concat(D, ' ', DAtom) , If=..[BAtom,AAtom] , Then=..[DAtom,CAtom].
+% save_data(A,B,C,D) :- atomic_list_concat(A, '_', AAtom) , atomic_list_concat(B, '_', BAtom), atomic_list_concat(C, '_', CAtom),
+%					  atomic_list_concat(D, '_', DAtom) , If=..[BAtom,AAtom] , Then=..[DAtom,CAtom].
 
 % http://openweathermap.org/
 temperature(City,Temp) :-

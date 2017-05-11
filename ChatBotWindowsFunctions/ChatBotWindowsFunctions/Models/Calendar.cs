@@ -10,6 +10,7 @@ namespace ChatBotWindowsFunctions.Models
     {
         public string Id { get; private set; }
         public string Summary { get; private set; }
+        public bool ReadOnly { get; private set; }
         private string Description { get; set; }
         private string Location { get; set; }
 
@@ -19,6 +20,7 @@ namespace ChatBotWindowsFunctions.Models
             Summary = cal.Summary;
             Description = cal.Description;
             Location = cal.Location;
+            ReadOnly = cal.AccessRole == "reader";
         }
     }
 }

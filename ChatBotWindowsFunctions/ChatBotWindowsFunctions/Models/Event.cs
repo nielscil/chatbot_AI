@@ -39,5 +39,20 @@ namespace ChatBotWindowsFunctions.Models
             builder.AppendLine(Description);
             return builder.ToString();
         }
+
+        public string ToStringWithDate()
+        {
+            StringBuilder builder = new StringBuilder();
+            if (AllDay)
+            {
+                builder.AppendLine($"{Summary} | The whole day | {Location}");
+            }
+            else
+            {
+                builder.AppendLine($"{Summary} | {Start.ToString("dd-mm-yyyy HH:mm")} - {Stop.ToString("dd-mm-yyyy HH:mm")} | {Location}");
+            }
+            builder.AppendLine(Description);
+            return builder.ToString();
+        }
     }
 }

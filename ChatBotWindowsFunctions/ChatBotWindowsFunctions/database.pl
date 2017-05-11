@@ -1,7 +1,7 @@
 :- module(database,
 			[add_user_fact/2,
 			 update_user_fact/2,
-			 get_user_fact/2,
+			 get_user_fact/2
 			]).
 			
 :- use_module(library(persistency)).

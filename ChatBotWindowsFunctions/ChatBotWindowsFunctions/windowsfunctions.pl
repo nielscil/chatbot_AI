@@ -85,23 +85,27 @@ mute_volume() :- cli_call('ChatBotWindowsFunctions.WindowsFunctions','Mute'(@tru
 unmute_volume() :- cli_call('ChatBotWindowsFunctions.WindowsFunctions','Mute'(@false),Return), Return = @false,!.
 
 get_and_write_calendars() :- get_calendars() , write_calendars().
+get_and_write_calendars(X) :- get_calendars() , write_calendars(X).
 
-write_calendars() :- not(current_predicate(calendar/3)), writeln('No calendars found').
-write_calendars() :- foreach(calendar(_,Summary,_), write_calendar(Summary)).
+write_calendars() :- not(current_predicate(calendar/4)), writeln('No calendars found').
+write_calendars() :- foreach(calendar(_,Summary,_,_), write_calendar(Summary)).
+
+write_calendars(_) :- not(current_predicate(calendar/4)), writeln('No calendars found').
+write_calendars(X) :- foreach(calendar(_,Summary,_,X), write_calendar(Summary)).
 
 write_calendar(Summary) :- write('| ') , write(Summary) , write(' |'), nl.
 
-get_calendars() :- current_predicate(calendar/3).
+get_calendars() :- current_predicate(calendar/4).
 get_calendars() :- cli_call('ChatBotWindowsFunctions.GoogleApiFunctions','GetCalendars',List) , add_calendars($List).
 
 add_calendars($List) :- cli_get($List,'Count',0).
 add_calendars($List) :- foreach(cli_col($List,I), add_calendar($I)).
 
-add_calendar($Cal) :- cli_get($Cal,'Summary',Summary) , cli_get($Cal,'Id',Id) , 
-					  atom_string(SummaryAtom,Summary) , atom_string(IdAtom,Id) , downcase_atom(SummaryAtom,DSum), asserta(calendar(DSum,SummaryAtom,IdAtom)).
+add_calendar($Cal) :- cli_get($Cal,'Summary',Summary) , cli_get($Cal,'Id',Id) , cli_get($Cal,'ReadOnly',ReadOnly) ,
+					  atom_string(SummaryAtom,Summary) , atom_string(IdAtom,Id), downcase_atom(SummaryAtom,DSum), asserta(calendar(DSum,SummaryAtom,IdAtom,ReadOnly)).
 					  
 write_upcoming_events() :- get_upcoming_events('primary',List) , write_events($List).
-write_upcoming_events(X) :- get_calendars(), atomic_list_concat(X, ' ', XAtom), calendar(XAtom,_,Y) , get_upcoming_events(Y,$List) , write_events($List).
+write_upcoming_events(X) :- get_calendars(), atomic_list_concat(X, ' ', XAtom), calendar(XAtom,_,Y,_) , get_upcoming_events(Y,$List) , write_events($List).
 
 get_upcoming_events(X,$List) :- cli_call('ChatBotWindowsFunctions.GoogleApiFunctions','GetUpcomingEvents'(X),List).
 
@@ -110,4 +114,30 @@ write_events($Obj) :- foreach(cli_col($Obj,I), write_event($I)).
 
 write_event($E) :- cli_call($E,'ToString',String), write(String).
 write_event(_).
+
+write_event_with_date($E) :- cli_call($E,'ToStringWithDate',String), write(String).
+
+create_event() :- get_event_details(ID,BeginDate, Begin, EndDate, End, Title, Description, Location) , cli_call('ChatBotWindowsFunctions.GoogleApiFunctions','AddEventToCalendar'(ID,Title,Description,Location,BeginDate,Begin,EndDate,End,'Europe/Amsterdam'),Event) ,
+					writeln('Added the following event:') , write_event_with_date($Event).
+
+get_event_details(ID,BeginDate, Begin, EndDate, End, Title, Description, Location) :- get_calendar_id(ID) , get_title(Title) , get_description(Description) ,
+					get_times(BeginDate,Begin,EndDate,End) , get_location(Location).
+
+get_times(BeginDate,Begin,EndDate,End) :- writeln('Which date does the appointment start? (dd-mm-yyyy)') , read_from_input(BeginDate) ,
+										  writeln('Alright, How late does the appointment start? (HH:mm)') , read_from_input(Begin) ,
+										  writeln('Okay, Which date does the appointment end? (dd-mm-yyyy)') , read_from_input(EndDate) ,
+										  writeln('Understood, How late does the appointment end? (HH:mm)') , read_from_input(End), writeln('Okay.').
+											
+get_title(Title) :- writeln('How should the appointment be called?'), read_from_input(Title) , writeln('Okay.').
+
+get_description(Description) :- writeln('What is the description of the appointment?'), read_from_input(Description) , writeln('Okay.').
+
+get_location(Location) :- writeln('What is the location of the appointment?'), read_from_input(Location) , writeln('Okay.').
+
+get_calendar_id(ID) :- writeln('Which of the following calendar would you like to add your appointment to?') , get_and_write_calendars(@false) , read_from_input(Input) ,
+						atom_string(XAtom,Input), calendar(XAtom,_,ID,_).
+											
+read_from_input(Text) :- current_input(Stream) , read_string(Stream,  "\n", "\r", _ , Text).
+
+
 
