@@ -21,7 +21,7 @@ namespace ChatBotWindowsFunctions.Models
             Description = e.Description;
             Location = e.Location;
             AllDay = !e.Start.DateTime.HasValue || !e.End.DateTime.HasValue;
-            Start = e.Start.DateTime.HasValue ? e.Start.DateTime.Value : DateTime.Now;
+            Start = e.Start.DateTime.HasValue ? e.Start.DateTime.Value : DateTime.Parse(e.Start.Date);
             Stop = e.End.DateTime.HasValue ? e.End.DateTime.Value : DateTime.Now;
         }
 
@@ -45,7 +45,7 @@ namespace ChatBotWindowsFunctions.Models
             StringBuilder builder = new StringBuilder();
             if (AllDay)
             {
-                builder.AppendLine($"{Summary} | The whole day | {Location}");
+                builder.AppendLine($"{Summary} | {Start.ToString("dd-mm-yyyy")} | {Location}");
             }
             else
             {

@@ -47,12 +47,12 @@ win_functions([
 
 win_functions([
 	pattern(['Get',star(_),upcoming,appointments]),
-	template(['This',are,you,upcoming,'events:\n',think(write_upcoming_events)])
+	template(['This',are,your,upcoming,'events:\n',think(write_upcoming_events)])
 ]).
 
 win_functions([
 	pattern(['Get',star(_),upcoming,appointments,for,star(A)]),
-	template(['This',are,you,upcoming,'events:\n',think(write_upcoming_events(A))])
+	template(['This',are,your,upcoming,'events:\n',think(write_upcoming_events(A))])
 ]).
 
 win_functions([
@@ -63,6 +63,16 @@ win_functions([
 win_functions([
 	pattern(['Show',star(A),upcoming,appointments,for,star(B)]),
 	template([srai(['Get',A,upcoming,appointments,for,B])])
+]).
+
+win_functions([
+	pattern(['Show',star(_),appointments,for,star(B)]),
+	template(['This',are,your,events,for,B,':\n',think(write_events(B,''))])
+]).
+
+win_functions([
+	pattern(['Show',star(_),calendar,star(A),for,star(B)]),
+	template(['This',are,your,events,for,calendar,A,on,B,':\n',think(write_events(A,B,''))])
 ]).
 
 win_functions([
@@ -104,10 +114,15 @@ add_calendars($List) :- foreach(cli_col($List,I), add_calendar($I)).
 add_calendar($Cal) :- cli_get($Cal,'Summary',Summary) , cli_get($Cal,'Id',Id) , cli_get($Cal,'ReadOnly',ReadOnly) ,
 					  atom_string(SummaryAtom,Summary) , atom_string(IdAtom,Id), downcase_atom(SummaryAtom,DSum), asserta(calendar(DSum,SummaryAtom,IdAtom,ReadOnly)).
 					  
-write_upcoming_events() :- get_upcoming_events('primary',List) , write_events($List).
+write_upcoming_events() :- get_upcoming_events('primary',$List) , write_events($List).
 write_upcoming_events(X) :- get_calendars(), atomic_list_concat(X, ' ', XAtom), calendar(XAtom,_,Y,_) , get_upcoming_events(Y,$List) , write_events($List).
 
+write_events(Date,End) :- get_events('primary',Date,End,$List) , write_events($List).
+write_events(X,Date,End) :- get_calendars(), writeln(X) , atomic_list_concat(X, ' ', XAtom), calendar(XAtom,_,Y,_) , get_events(Y,Date,End,$List) , write_events($List).
+
 get_upcoming_events(X,$List) :- cli_call('ChatBotWindowsFunctions.GoogleApiFunctions','GetUpcomingEvents'(X),List).
+
+get_events(X,Date,End,$List) :- cli_call('ChatBotWindowsFunctions.GoogleApiFunctions','GetEvents'(Date,End,X),List).
 
 write_events($Obj) :- cli_get($Obj,'Count',0) , writeln('No appointments found for today').
 write_events($Obj) :- foreach(cli_col($Obj,I), write_event($I)).
@@ -135,7 +150,8 @@ get_description(Description) :- writeln('What is the description of the appointm
 get_location(Location) :- writeln('What is the location of the appointment?'), read_from_input(Location) , writeln('Okay.').
 
 get_calendar_id(ID) :- writeln('Which of the following calendar would you like to add your appointment to?') , get_and_write_calendars(@false) , read_from_input(Input) ,
-						atom_string(XAtom,Input), calendar(XAtom,_,ID,_).
+						atom_string(XAtom,Input), calendar(XAtom,_,ID,_).	
+get_calendar_id(ID) :- writeln('That calendar is unknown') , get_calendar_id(ID).		
 											
 read_from_input(Text) :- current_input(Stream) , read_string(Stream,  "\n", "\r", _ , Text).
 
