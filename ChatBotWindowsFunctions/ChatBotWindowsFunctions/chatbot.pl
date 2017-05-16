@@ -105,11 +105,7 @@ category(X) :- win_functions(X).
 
 category([
 	pattern([star(_)]),
-	template([random([
-		[so,what,is,your,horoscope,'?'],
-		[do,you,like,movies,'?'],
-		[do,you,like,dancing,'?']])
-	])
+	template(['Huh??!'])
 ]).
 
 % Family tree
@@ -174,4 +170,4 @@ art --> [the];[a];[an].
 
 noun --> [cat];[dog];[mouse];[rat];[table].
 
-%:- write('\33\[2J') , loop.
+:- write('\33\[2J') , loop.

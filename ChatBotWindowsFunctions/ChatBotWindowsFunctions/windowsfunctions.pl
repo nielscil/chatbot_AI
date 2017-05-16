@@ -81,8 +81,13 @@ win_functions([
 ]).
 
 win_functions([
-	pattern([star(_),create,a,new,appointment]),
+	pattern([star(_),create,star(_),appointment]),
 	template([think(create_event())])
+]).
+
+win_functions([
+	pattern([star(A),add,star(B),appointment]),
+	template([srai([A,create,B,appointment])])
 ]).
 
 win_functions([
@@ -230,10 +235,10 @@ create_mail() :- writeln('To whom needs the mail to be send? (seperated with '',
 											
 read_from_input(Text) :- current_input(Stream) , read_string(Stream,  "\n", "\r", _ , Text).
 
-write_c_hekje($E,Bool) :- cli_call($E,'ToString'(Bool),String), write(String).
+write_c_hekje($E,Bool) :- cli_call($E,'ToString'(Bool),String), writeln(String).
 write_c_hekje(_,_).
 
-write_c_hekje($E) :- cli_call($E,'ToString',String), write(String).
+write_c_hekje($E) :- cli_call($E,'ToString',String), writeln(String).
 write_c_hekje(_).
 
 
