@@ -84,7 +84,7 @@ category([
 ]).
 
 category([
-	pattern([star(_),goodbye]),
+	pattern([star(_),goodbye,star(_)]),
 	template([think(halt)])
 ]).
 
@@ -93,6 +93,11 @@ category([
 	template(think(get_var(name,Name)),
 	positive(['Hello',Name,',what',can,'I',do,for,'you?']),
 	negative(['Hello,',what,is,your,'name?']))
+]).
+
+category([
+	pattern([what,is,your,name]),
+	template([my,name,is,alice])
 ]).
 
 category(X) :- name_category(X).
@@ -158,6 +163,10 @@ chuckNorrisJoke(Joke) :-
 	http_get('http://api.icndb.com/jokes/random?escape=javascript&exclude=[nerdy,explicit]',json(Json),[]),
 	member(value=json(W),Json),
 	member(joke=Joke,W).
+	
+%poetry(Title,Autor) :- atomic_list_concat(Title,' ',ATitle) , atomic_list_concat(Autor,' ',AAutor), atomic_concat(AAutor,';',B1) , atomic_concat(B1,';',B2),
+%						atomic_concat(B2,ATitle,B3) , atomic_concat('http://poetrydb.org/author,title/',B3,Final) , http_get(Final,json(R),[]).
+						
 
 np --> art, noun.
 

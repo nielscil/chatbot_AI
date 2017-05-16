@@ -1,4 +1,5 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using AE.Net.Mail;
+using Google.Apis.Auth.OAuth2;
 
 using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
@@ -16,9 +17,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ChatBotWindowsFunctions;
 
 namespace ChatBotWindowsFunctions
 {
@@ -113,7 +116,7 @@ namespace ChatBotWindowsFunctions
         }
 
         private static Userinfoplus _userInfo;
-        private static Userinfoplus UserInfo
+        public static Userinfoplus UserInfo
         {
             get
             {
@@ -148,7 +151,11 @@ namespace ChatBotWindowsFunctions
                 foreach(var label in Labels)
                 {
                     if(label.Id == "INBOX")
+                    {
+                        return label;
+                    }
                 }
+                return null;
             }
         }
 
@@ -246,15 +253,34 @@ namespace ChatBotWindowsFunctions
 
         #region Gmail
 
-        public static Models.Mail WriteMail(string mail,string subject, string message)
+        public static Models.Mail WriteMail(string mail,string subject, string body)
         {
-            Message m = new Message()
+            AE.Net.Mail.MailMessage message = new AE.Net.Mail.MailMessage()
             {
-                Raw = EncodeForMail(mail, subject, message),
+                Subject = subject,
+                Body = body,
+                From = new MailAddress(UserInfo.Email)
             };
 
-            var request = GmailService.Users.Messages.Send(m, UserInfo.Email);
-            return new Models.Mail(request.Execute());
+            foreach(var address in mail.Split(','))
+            {
+                message.To.Add(new MailAddress(address));
+            }
+
+            Message m = GmailService.Users.Messages.Send(message.ToMessage(), UserInfo.Email).Execute();
+            return GetMail(m.Id);
+        }
+
+        public static Models.Mail Reply(string id, string body)
+        {
+            Message m = GetMessage(id);
+            Models.Mail mail = new Models.Mail(m);
+
+            Message message = m.Reply(body).ToMessage(m.ThreadId);
+
+            Message response = GmailService.Users.Messages.Send(message, UserInfo.Email).Execute();
+
+            return GetMail(response.Id);
         }
 
         public static IList<Models.Mail> GetMails(bool unread)
@@ -262,14 +288,31 @@ namespace ChatBotWindowsFunctions
             UsersResource.MessagesResource.ListRequest request = GmailService.Users.Messages.List(UserInfo.Email);
             request.LabelIds = new Repeatable<string>(GetLabelIds(unread));
 
+            if(!unread)
+            {
+                request.MaxResults = 10;
+            }
+
             IList<Models.Mail> mails = new List<Models.Mail>();
 
-            foreach (var mail in request.Execute().Messages)
+            ListMessagesResponse response = request.Execute();
+            foreach (var mail in response.Messages)
             {
-                mails.Add(new Models.Mail(mail));
+                mails.Add(GetMail(mail.Id));
             }
 
             return mails;
+        }
+
+        public static Models.Mail GetMail(string id)
+        {
+            return new Models.Mail(GetMessage(id));
+        }
+
+        private static Message GetMessage(string id)
+        {
+            UsersResource.MessagesResource.GetRequest request = GmailService.Users.Messages.Get(UserInfo.Email, id);
+            return request.Execute();
         }
 
         private static List<string> GetLabelIds(bool unread)
@@ -282,18 +325,6 @@ namespace ChatBotWindowsFunctions
             }
 
             return list;
-        }
-
-        private static string EncodeForMail(string mail,string subject, string message)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"To: {mail}");
-            sb.AppendLine($"Subject: {subject}");
-            sb.AppendLine("Content-Type: text/plain; charset=utf-8");
-            sb.AppendLine();
-            sb.AppendLine(message);
-            var inputBytes = Encoding.UTF8.GetBytes(sb.ToString());
-            return Convert.ToBase64String(inputBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
         }
 
         #endregion

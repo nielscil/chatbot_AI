@@ -45,11 +45,11 @@ namespace ChatBotWindowsFunctions.Models
             StringBuilder builder = new StringBuilder();
             if (AllDay)
             {
-                builder.AppendLine($"{Summary} | {Start.ToString("dd-mm-yyyy")} | {Location}");
+                builder.AppendLine($"{Summary} | {Start.ToString("dd-MM-yyyy")} | {Location}");
             }
             else
             {
-                builder.AppendLine($"{Summary} | {Start.ToString("dd-mm-yyyy HH:mm")} - {Stop.ToString("dd-mm-yyyy HH:mm")} | {Location}");
+                builder.AppendLine($"{Summary} | {Start.ToString("dd-MM-yyyy HH:mm")} - {Stop.ToString("dd-MM-yyyy HH:mm")} | {Location}");
             }
             builder.AppendLine(Description);
             return builder.ToString();
